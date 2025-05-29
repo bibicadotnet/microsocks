@@ -3,7 +3,7 @@ FROM alpine:3.16 AS builder
 RUN apk --no-cache add \
     make \
     gcc \
-    musl-dev  # Thư viện C cực nhẹ
+    musl-dev
 
 COPY . /opt/microsocks
 
