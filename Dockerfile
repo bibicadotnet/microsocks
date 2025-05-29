@@ -1,17 +1,15 @@
 FROM alpine:3.16 AS builder
 
-RUN apk --no-cache --update add make gcc linux-headers musl-dev && \
-    cp -r . /build && cd /build && \
-    make clean && make && \
-    strip /build/microsocks
+RUN apk --no-cache --update add make gcc musl-dev
 
-FROM alpine:3.16
+COPY . /opt/microsocks
 
-COPY --from=builder /build/microsocks /usr/local/bin/
+WORKDIR /opt/microsocks
 
-RUN adduser -D -H -s /bin/false socksuser && \
-    chmod +x /usr/local/bin/microsocks
+RUN make clean && make && strip microsocks
 
-USER socksuser
+FROM busybox:musl
+
+COPY --from=builder /opt/microsocks/microsocks /usr/local/bin/
 
 ENTRYPOINT ["/usr/local/bin/microsocks"]
