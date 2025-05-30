@@ -1,15 +1,19 @@
-FROM alpine:3.16 AS build
+FROM alpine:latest as builder
+ARG MICROSOCKS_TAG=v1.0.5
+ENV MICROSOCKS_URL="https://github.com/rofl0r/microsocks/archive/refs/tags/$MICROSOCKS_TAG.zip"
+WORKDIR /build
+ADD $MICROSOCKS_URL .
+RUN apk add --update --no-cache \
+      build-base unzip && \
+      unzip $MICROSOCKS_TAG.zip && \
+      cd microsocks-${MICROSOCKS_TAG:1} && \
+      make && \
+      cp ./microsocks ..
 
-RUN apk --no-cache add make gcc linux-headers git musl-dev musl-gcc
-
-RUN git clone https://github.com/rofl0r/microsocks.git  /opt/microsocks
-WORKDIR /opt/microsocks
-
-RUN CC=musl-gcc make && ls -l
-
-FROM alpine:3.16
-LABEL MAINTAINER=heywoodlh
-
-COPY --from=build /opt/microsocks/microsocks /usr/local/bin/microsocks
-
-ENTRYPOINT ["/usr/local/bin/microsocks"]
+FROM alpine
+WORKDIR /app
+COPY --from=builder /build/microsocks .
+RUN apk add --update --no-cache \
+      coreutils shadow tzdata && \
+      chmod +x ./microsocks
+ENTRYPOINT [ "/app/microsocks" ]
