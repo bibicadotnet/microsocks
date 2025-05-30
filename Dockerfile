@@ -1,30 +1,29 @@
 # Bước 1: Build microsocks
-FROM alpine:3.16 AS build
+FROM alpine:3.18 AS build
 
 # Cài đặt các công cụ cần thiết để biên dịch
-RUN apk --no-cache add make gcc linux-headers git musl-dev musl-gcc
+RUN apk --no-cache add make gcc linux-headers git musl-dev
 
 # Cloning microsocks repo
 RUN git clone https://github.com/rofl0r/microsocks /opt/microsocks
 WORKDIR /opt/microsocks
 
-# Kiểm tra xem musl-gcc có tồn tại không
-RUN which musl-gcc || echo "musl-gcc not found"
-
-# Biên dịch với musl-gcc
-RUN CC=musl-gcc make V=1
+# Biên dịch với các flags tối ưu
+RUN make CFLAGS="-O2 -pipe"
 
 # Bước 2: Tạo image cuối cùng
-FROM alpine:3.16
+FROM alpine:3.18
 
 # Ghi chú người bảo trì
 LABEL MAINTAINER=heywoodlh
 
-# Sao chép microsocks đã biên dịch từ bước trước
-COPY --from=build /opt/microsocks/microsocks /usr/local/bin/microsocks
+# Sao chép microsocks đã biên dịch
+COPY --from=build /opt/microsocks/microsocks /usr/local/bin/
 
-# Kiểm tra lại microsocks có tồn tại không và có quyền thực thi
-RUN ls -l /usr/local/bin/ && chmod +x /usr/local/bin/microsocks
+# Kiểm tra và cấp quyền thực thi
+RUN ls -l /usr/local/bin/microsocks && \
+    chmod +x /usr/local/bin/microsocks && \
+    ldd /usr/local/bin/microsocks || true
 
-# Cài đặt quyền cho microsocks
+# Cài đặt entrypoint
 ENTRYPOINT ["/usr/local/bin/microsocks"]
