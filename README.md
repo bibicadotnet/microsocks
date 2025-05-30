@@ -1,3 +1,5 @@
+[Docker Hub](https://hub.docker.com/r/bibica/microsocks)
+
 MicroSocks - highly recommended
 ===========================================================
 
@@ -8,4 +10,4 @@ wget -qO microsocks.sh https://go.bibica.net/microsocks && sudo bash microsocks.
 
 ```
 
-- Run via docker, randomize account and password, disable logging, enable auth_once
+- Run via docker, randomize user, password, port, disable logging, enable auth_once
