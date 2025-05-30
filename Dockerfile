@@ -1,24 +1,21 @@
-FROM alpine:3.16 AS builder
+# Bước 1: Xây dựng môi trường với các công cụ cần thiết
+FROM alpine:3.16 AS build
 
-# Cài dependencies tối thiểu (bỏ linux-headers)
-RUN apk --no-cache add make gcc musl-dev
+RUN apk --no-cache add make gcc linux-headers git musl-dev musl-utils
 
-# Copy source code local
-COPY . /opt/microsocks
+# Clone và build microsocks từ GitHub
+RUN git clone https://github.com/rofl0r/microsocks /opt/microsocks
 WORKDIR /opt/microsocks
 
-# Build và strip binary
-RUN make clean && \
-    make && \
-    strip microsocks && \
-    mkdir -p /output && \
-    mv microsocks /output/
+# Biên dịch microsocks với các thư viện tĩnh (static linking)
+RUN make CFLAGS="-O2 -static" && strip microsocks
 
-# Runtime image
+# Bước 2: Tạo image sản phẩm cuối cùng
 FROM alpine:3.16
+LABEL MAINTAINER=heywoodlh
 
-# Copy binary và set permission
-COPY --from=builder /output/microsocks /usr/local/bin/
-RUN chmod +x /usr/local/bin/microsocks
+# Copy file microsocks vào thư mục /usr/local/bin trong container
+COPY --from=build /opt/microsocks/microsocks /usr/local/bin/microsocks
 
+# Đảm bảo rằng entrypoint sử dụng microsocks
 ENTRYPOINT ["/usr/local/bin/microsocks"]
