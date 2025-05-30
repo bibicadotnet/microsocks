@@ -1,14 +1,12 @@
-FROM alpine:3.16 AS build
+FROM alpine:3.18 AS build
 
-RUN apk --no-cache add make gcc linux-headers git musl-dev
+RUN apk add --no-cache make gcc musl-dev linux-headers
+WORKDIR /app
+COPY . .
 
-RUN git clone https://github.com/rofl0r/microsocks /opt/microsocks
-WORKDIR /opt/microsocks
+RUN make clean && make CFLAGS='-O2 -static' && strip microsocks
 
-RUN make
+FROM alpine:3.18
 
-FROM alpine:3.16
-
-COPY --from=build /opt/microsocks/microsocks /usr/local/bin/microsocks
-
+COPY --from=build /app/microsocks /usr/local/bin/microsocks
 ENTRYPOINT ["/usr/local/bin/microsocks"]
