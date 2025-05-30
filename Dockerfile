@@ -1,18 +1,24 @@
-FROM alpine:3.18 AS build
+FROM alpine:3.16 AS builder
 
-RUN apk add --no-cache make gcc musl-dev linux-headers xz wget
+# Cài dependencies tối thiểu (bỏ linux-headers)
+RUN apk --no-cache add make gcc musl-dev
 
-WORKDIR /opt
+# Copy source code local
+COPY . /opt/microsocks
+WORKDIR /opt/microsocks
 
-RUN wget https://github.com/rofl0r/microsocks/archive/refs/tags/v1.0.5.tar.gz \
-    && tar xf v1.0.5.tar.gz
+# Build và strip binary
+RUN make clean && \
+    make && \
+    strip microsocks && \
+    mkdir -p /output && \
+    mv microsocks /output/
 
-WORKDIR /opt/microsocks-1.0.5
+# Runtime image
+FROM alpine:3.16
 
-RUN make clean && make CFLAGS='-O2 -static' && strip microsocks
-
-FROM alpine:3.18
-
-COPY --from=build /opt/microsocks-1.0.5/microsocks /usr/local/bin/microsocks
+# Copy binary và set permission
+COPY --from=builder /output/microsocks /usr/local/bin/
+RUN chmod +x /usr/local/bin/microsocks
 
 ENTRYPOINT ["/usr/local/bin/microsocks"]
