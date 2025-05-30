@@ -11,5 +11,5 @@ RUN apk --no-cache add make gcc linux-headers git musl-dev && \
 FROM scratch
 
 COPY --from=builder /opt/microsocks/microsocks /microsocks
-EXPOSE 1080
+
 ENTRYPOINT ["/microsocks"]
