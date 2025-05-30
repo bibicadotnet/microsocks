@@ -1,18 +1,14 @@
-# Stage 1: Optimized build
+# Stage 1: Build với Alpine (như bản gốc)
 FROM alpine:3.18 AS builder
 
 RUN apk --no-cache add make gcc linux-headers git musl-dev && \
-    git clone --depth 1 https://github.com/rofl0r/microsocks /opt/microsocks && \
+    git clone https://github.com/rofl0r/microsocks /opt/microsocks && \
     cd /opt/microsocks && \
-    make CFLAGS="-Os -pipe -static" LDFLAGS="-static -s" && \
-    strip --strip-all microsocks && \
-    apk del --purge make gcc linux-headers git musl-dev && \
-    rm -rf /var/cache/apk/* /opt/microsocks/.git
+    make LDFLAGS="-static"  # Biên dịch thành static binary
 
-# Stage 2: Minimal runtime
-FROM alpine:3.18
+# Stage 2: Image cuối - chỉ chứa file binary
+FROM scratch
 
-COPY --from=builder /opt/microsocks/microsocks /usr/local/bin/
-RUN chmod +x /usr/local/bin/microsocks
+COPY --from=builder /opt/microsocks/microsocks /microsocks
 
-ENTRYPOINT ["/usr/local/bin/microsocks"]
+ENTRYPOINT ["/microsocks"]
