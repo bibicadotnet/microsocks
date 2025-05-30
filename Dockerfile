@@ -5,7 +5,7 @@ RUN apk add --no-cache make gcc musl-dev linux-headers xz wget
 WORKDIR /opt
 
 RUN wget https://github.com/rofl0r/microsocks/archive/refs/tags/v1.0.5.tar.gz \
-    && tar xf microsocks-1.0.5.tar.xz
+    && tar xf v1.0.5.tar.gz
 
 WORKDIR /opt/microsocks-1.0.5
 
