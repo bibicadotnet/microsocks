@@ -12,4 +12,6 @@ FROM scratch
 
 COPY --from=builder /opt/microsocks/microsocks /microsocks
 
+USER 65534:65534
+
 ENTRYPOINT ["/microsocks"]
